@@ -1,0 +1,69 @@
+<!-- app_auth/templates/app_auth/table.html -->
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Таблица задач</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #f0f0f0; }
+    .negative { color: red; }   /* когда просрочено */
+  </style>
+</head>
+<body>
+  <h1>Таблица задач</h1>
+  <p>Просмотр: {{ today }} | Пользователь: {{ request.user.username }} | <a href="{% url 'logout' %}">Выйти</a></p>
+
+  <h2>Добавить новую задачу</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button id="btn-add" type="submit">Добавить</button>
+  </form>
+
+  <h2>Список задач (сортировка: по оставшимся дням, от меньшего к большему)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Обязаловка</th>
+        <th>Когда выполнено</th>
+        <th>Периодичность (дней)</th>
+        <th>Следующее исполнение</th>
+        <th>Осталось дней до исполнения</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.task }}</td>
+        <td>{{ row.done_date|date:"d F Y г." }}</td>
+        <td>{{ row.period_days }}</td>
+        <td>{{ row.next_date|date:"d F Y г." }}</td>
+        <td>
+          {% if row.days_left < 0 %}
+            <span class="negative">{{ row.days_left }}</span>
+          {% else %}
+            {{ row.days_left }}
+          {% endif %}
+        </td>
+        <td>
+          <form action="{% url 'delete_task' row.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" onclick="return confirm('Удалить задачу?')">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6">Нет задач</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

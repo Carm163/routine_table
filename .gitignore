@@ -1,0 +1,18 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+
+# Django static/media
+static/
+media/
+
+# Playwright
+test-results/
+playwright-report/
+ms-playwright/
+
+# OS junk
+.DS_Store
+Thumbs.db

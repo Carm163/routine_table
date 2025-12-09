@@ -1,0 +1,30 @@
+{% load static %}
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Вход</title>
+    <link rel="stylesheet" href="{% static 'app_auth/style.css' %}">
+</head>
+<body>
+
+<div class="top-logo">
+    <img src="{% static 'app_auth/logo.png' %}" alt="Logo">
+</div>
+
+<div class="login-container">
+    <h1>Вход</h1>
+
+    {% if message %}
+        <p class="error">{{ message }}</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Войти</button>
+    </form>
+</div>
+
+</body>
+</html>
