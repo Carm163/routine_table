@@ -1,0 +1,61 @@
+stages:
+  - build
+  - test
+
+variables:
+  DOCKER_DRIVER: overlay2
+  APP_IMAGE: lazytable_web
+  TESTS_IMAGE: lazytable_tests
+
+# -------------------------
+#   BUILD DJANGO IMAGE
+# -------------------------
+build_app:
+  stage: build
+  tags: []
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $APP_IMAGE -f docker/django.Dockerfile .
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - docker_build.log
+  only:
+    - main
+    - master
+
+# -------------------------
+#    RUN PLAYWRIGHT TESTS
+# -------------------------
+run_tests:
+  stage: test
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    # 1. Сборка образа Django
+    - docker build -t $APP_IMAGE -f docker/django.Dockerfile .
+
+    # 2. Запуск Django + SQLite
+    - docker run -d --name test_web -p 8000:8000 $APP_IMAGE
+
+    # 3. Ждём пока Django поднимется
+    - echo "Waiting for Django..."
+    - for i in {1..30}; do curl -s http://localhost:8000 && break || sleep 2; done
+
+    # 4. Сборка образа тестов
+    - docker build -t $TESTS_IMAGE -f docker/tests.Dockerfile .
+
+    # 5. Запуск Playwright тестов
+    - docker run --rm --network=host $TESTS_IMAGE
+
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - test-results/
+      - playwright-report/
+  only:
+    - main
+    - master
